@@ -1,0 +1,68 @@
+df = pd.read_csv('/Users/priscafehiarisoadama/IdeaProjects/django_language_test_models/data/data.csv')
+test_data=pd.read_csv('/Users/priscafehiarisoadama/IdeaProjects/django_language_test_models/data/data2.csv')
+df=df+test_data
+
+print(df.tail())
+
+df.SkewnessLength = df.SkewnessLength.fillna(0)
+df=df.drop(['longueur'],axis=1)
+# df=df.drop(['Proportion0'],axis=1)
+# df=df.drop(['Proportion1'],axis=1)
+# df=df.drop(['ecartType'],axis=1)
+# df=df.drop(['NumSeqStart1'],axis=1)
+# df=df.drop(['NumSeqStart0'],axis=1)
+df=df.drop(['MedianLength'],axis=1)
+df=df.drop(['ModeLength'],axis=1)
+# df=df.drop(['IQRLength'],axis=1)
+df=df.drop(['SkewnessLength'],axis=1)
+# df=df.drop(['minLength'],axis=1)
+# df=df.drop(['max length'],axis=1)
+# df=df.drop(['IsCode'],axis=1)
+
+df=df.sort_values(axis=1,by=[12])
+
+training_data = df
+# x_train=X
+# y_train=Y
+# x_test=test_data.drop("IsCode",axis=1)
+# y_test=test_data["IsCode"]
+
+#
+# clf1 = DecisionTreeClassifier(max_depth=4)
+# clf2 = KNeighborsClassifier(n_neighbors=7)
+# clf3 = SVC(kernel='rbf', probability=True)
+# eclf = VotingClassifier(estimators=[('dt', clf1), ('knn', clf2), ('svc', clf3)],
+#                         voting='soft', weights=[2, 1, 2])
+# gradBouust=GradientBoostingClassifier(
+#     n_estimators=25, subsample=0.5, min_samples_leaf=25, max_features=1,
+#     random_state=1)
+# clf = RandomForestClassifier(n_estimators=100, max_depth=None,
+#                              min_samples_split=2, random_state=1)
+# clfextra = ExtraTreesClassifier(n_estimators=10, max_depth=None,
+#                            min_samples_split=2, random_state=0)
+# hgcld=HistGradientBoostingClassifier(max_iter=100).fit(x_train,y_train)
+# clf1 = clf1.fit(X, Y)
+# clf2 = clf2.fit(x_train, y_train)
+# clf3 = clf3.fit(x_train, y_train)
+# eclf = eclf.fit(x_train, y_train)
+# gradBouust = gradBouust.fit(x_train, y_train)
+# clf = clf.fit(x_train, y_train)
+# clfextra = clfextra.fit(x_train, y_train)
+
+# scores = clf1.score(x_test, y_test)
+# scores1 = clf2.score(x_test, y_test)
+# scores2 = clf3.score(x_test, y_test)
+# scores3 =eclf.score(x_test, y_test)
+# scores5 =gradBouust.score(x_test, y_test)
+# scores6 = clf.score(x_test, y_test)
+# scores7 = clfextra.score(x_test, y_test)
+# scores8 = hgcld.score(x_test, y_test)
+
+# print(scores)
+# print(scores1)
+# print(scores2)
+# print(scores3)
+# print(scores5)
+# print(scores6)
+# print(scores7)
+# print(scores8)
