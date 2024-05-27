@@ -407,36 +407,80 @@ def save_langages_to_csv(langages, filename):
 # create a model
 
 def createAdaBoostClassifierModel():
+    # Charger les données d'entraînement et de test
     df = pd.read_csv('/Users/priscafehiarisoadama/IdeaProjects/django_language_test_models/data/data.csv')
-    test_data=pd.read_csv('/Users/priscafehiarisoadama/IdeaProjects/django_language_test_models/data/data2.csv')
-    df=df+test_data
-    # df.SkewnessLength = df.SkewnessLength.fillna(0)
-    df=df.drop(['longueur'],axis=1)
-    df=df.drop(['SkewnessLength'],axis=1)
-    training_data = df
+    test_data = pd.read_csv('/Users/priscafehiarisoadama/IdeaProjects/django_language_test_models/data/data2.csv')
     np.random.seed(42)
-    X=training_data.drop("IsCode",axis=1)
-    Y=training_data["IsCode"]
-    training_columns = X.columns
+    print(df.head(5))
+    # df = df.drop(['longueur', 'SkewnessLength',"NumSeqStart1","NumSeqStart0"], axis=1)
+    # test_data = test_data.drop(['longueur', 'SkewnessLength',"NumSeqStart1","NumSeqStart0"], axis=1)
+    X_train = df.drop("IsCode", axis=1)
+    Y_train = df["IsCode"]
+    X_test = test_data.drop("IsCode", axis=1)
+    Y_test = test_data["IsCode"]
+    training_columns = X_train.columns
     print(training_columns)
-    print("unique ",df["IsCode"])
 
-    # split the data
-    x_train, x_test, y_train , y_test=train_test_split(X,Y,test_size= 0.2)
-    # Normalize the data
+
+
+    # Normaliser les données
     scaler = StandardScaler()
-    x_train_scaled = scaler.fit_transform(x_train)
-    x_test_scaled = scaler.transform(x_test)
+    X_train_scaled = scaler.fit_transform(X_train)
+    X_test_scaled = scaler.transform(X_test)
 
+    # Entraîner le modèle AdaBoost
     ada = AdaBoostClassifier(algorithm='SAMME', n_estimators=100, random_state=0)
-    ada = ada.fit(x_train_scaled, y_train)
-    scores4 = ada.score(x_test_scaled, y_test)
-    print(scores4)
+    ada.fit(X_train_scaled, Y_train)
+    scores4 = ada.score(X_test_scaled, Y_test)
 
-    # Save the model and scaler
-    joblib.dump(ada, '../../data/model/best_ada_model.pkl')
-    joblib.dump(scaler, '../../data/model/scaler.pkl')
-    joblib.dump(training_columns, '../../data/model/training_columns.pkl')
+    # test
+    clf1 = DecisionTreeClassifier(max_depth=4)
+    clf2 = KNeighborsClassifier(n_neighbors=7)
+    clf3 = SVC(kernel='rbf', probability=True)
+    eclf = VotingClassifier(estimators=[('dt', clf1), ('knn', clf2), ('svc', clf3)],
+                            voting='soft', weights=[2, 1, 2])
+    gradBouust=GradientBoostingClassifier(
+        n_estimators=25, subsample=0.5, min_samples_leaf=25, max_features=1,
+        random_state=1)
+    clf = RandomForestClassifier(n_estimators=100, max_depth=None,
+                                 min_samples_split=2, random_state=1)
+    clfextra = ExtraTreesClassifier(n_estimators=10, max_depth=None,
+                               min_samples_split=2, random_state=0)
+    hgcld=HistGradientBoostingClassifier(max_iter=100).fit(X_train_scaled,Y_train)
+    clf1 = clf1.fit(X_train_scaled, Y_train)
+    clf2 = clf2.fit(X_train_scaled, Y_train)
+    clf3 = clf3.fit(X_train_scaled, Y_train)
+    eclf = eclf.fit(X_train_scaled, Y_train)
+    gradBouust = gradBouust.fit(X_train_scaled, Y_train)
+    clf = clf.fit(X_train_scaled, Y_train)
+    clfextra = clfextra.fit(X_train_scaled, Y_train)
+
+    scores = clf1.score(X_test_scaled, Y_test)
+    scores1 = clf2.score(X_test_scaled, Y_test)
+    scores2 = clf3.score(X_test_scaled, Y_test)
+    scores3 =eclf.score(X_test_scaled, Y_test)
+    scores5 =gradBouust.score(X_test_scaled, Y_test)
+    scores6 = clf.score(X_test_scaled, Y_test)
+    scores7 = clfextra.score(X_test_scaled, Y_test)
+    scores8 = hgcld.score(X_test_scaled, Y_test)
+
+    print("DecisionTreeClassifier",scores)
+    print("KNeighborsClassifier",scores1)
+    print("SVC",scores2)
+    print("VotingClassifier",scores3)
+    print("GradientBoostingClassifier",scores5)
+    print("RandomForestClassifier",scores6)
+    print("ExtraTreesClassifier",scores7)
+    print("HistGradientBoostingClassifier",scores8)
+
+
+
+    print("ada",scores4)
+
+    # Sauvegarder le modèle, le scaler et les colonnes d'entraînement
+    joblib.dump(ada, '/Users/priscafehiarisoadama/IdeaProjects/django_language_test_models/data/model/best_ada_model.pkl')
+    joblib.dump(scaler, '/Users/priscafehiarisoadama/IdeaProjects/django_language_test_models/data/model/scaler.pkl')
+    joblib.dump(training_columns, '/Users/priscafehiarisoadama/IdeaProjects/django_language_test_models/data/model/training_columns.pkl')
 
 
 def predict_language( language):
@@ -452,21 +496,24 @@ def predict_language( language):
     properties_df = pd.DataFrame(data=[properties], columns=columns)  # Create DataFrame with correct columns
     properties_scaled = scaler.transform(properties_df)
     resp=model.predict(properties_scaled)[0]
-    if resp==2:
+    if resp==1:
         return True
     return False
 
 # langage = generatelangage()
-langage =['1100', '110011', '1010', '1011010', '1111010', '110', '100001', '1010100', '1010101']
-# lan = generateAnEqualListOflangages(5000)
+langage =['1010', '0', '010110', '0011', '0010', '10111', '1']
+# lan = generateAnEqualListOflangages(2500)
 ## save langages to csv
 # save_langages_to_csv(lan,"/Users/priscafehiarisoadama/IdeaProjects/django_language_test_models/data/data2.csv")
 
 
-# createAdaBoostClassifierModel()
+createAdaBoostClassifierModel()
 print(predict_language(langage))
 print(langage)
 print(checkIfCode(langage))
+
+# =======================test lan ============================
+
 
 
 
