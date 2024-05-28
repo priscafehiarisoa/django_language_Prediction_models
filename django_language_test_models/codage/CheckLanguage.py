@@ -35,7 +35,18 @@ from sklearn.tree._classes import DecisionTreeClassifier
 def isPrefixe(string_code, string_prefix):
     return string_code.startswith(string_prefix)
 
+def languageHasPrefix(langage,string_prefix):
+    for i in langage:
+        if isPrefixe(i,string_prefix) and i != string_prefix:
+            return True
+    return False
 
+def countPrefixe(langage):
+    nombrePrefixe=0
+    for i in langage :
+        if languageHasPrefix(langage,i):
+            nombrePrefixe+=1
+    return nombrePrefixe
 def removePrefix(string_code, string_prefix):
     resultat = string_code.removeprefix(string_prefix)
     if resultat == "":
@@ -170,9 +181,8 @@ def generateAnEqualListOflangages(number):
     i = 0
     while len(allLan) != number:
         i += 1
-        print(i)
         langage = generatelangageArray(allLan)
-        print(langage, checkIfCode(langage))
+        print("(",langage,"," ,checkIfCode(langage),"),")
         if checkIfCode(langage) and len(code) < (max):
             code.append(langage)
             allLan.append(langage)
@@ -183,124 +193,68 @@ def generateAnEqualListOflangages(number):
 
 
 # get the features YAYYYY
-def getAverageLength(langage=[]):
-    count = len(langage)
-    sumCount = 0
-    for i in langage:
-        sumCount += len(i)
-    return sumCount / count
+def getAverageLength(langage):
+    return sum(len(seq) for seq in langage) / len(langage) if langage else 0
 
+def get_0_proportion(langage):
+    total_0 = sum(seq.count('0') for seq in langage)
+    total_bits = sum(len(seq) for seq in langage)
+    return total_0 / total_bits if total_bits else 0
 
-def get_0_proportion(langage=[]):
-    digit_0_count = sum(s.count('0') for s in langage)
-    digit_1_count = sum(s.count('1') for s in langage)
-    total_digits = (digit_1_count if digit_1_count else 0) + (digit_0_count if digit_0_count else 0)
-    return digit_0_count / total_digits
+def get_1_proportion(langage):
+    total_1 = sum(seq.count('1') for seq in langage)
+    total_bits = sum(len(seq) for seq in langage)
+    return total_1 / total_bits if total_bits else 0
 
-
-def get_1_proportion(langage=[]):
-    digit_0_count = sum(s.count('0') for s in langage)
-    digit_1_count = sum(s.count('1') for s in langage)
-    total_digits = (digit_1_count if digit_1_count else 0) + (digit_0_count if digit_0_count else 0)
-    return digit_1_count / total_digits
-
-
-def get_ecartType_nombre_sequence(langage=[]):
+def get_ecartType_nombre_sequence(langage):
     moyenne = getAverageLength(langage)
     sommeCarreEcart = sum((len(x) - moyenne) ** 2 for x in langage)
     variance = sommeCarreEcart / len(langage)
     ecartType = np.sqrt(variance)
     return ecartType
 
+def get_number_seq_start_1(langage):
+    return sum(seq.startswith('1') for seq in langage)
 
-def get_number_seq_start_1(langage=[]):
-    count = 0
-    for i in langage:
-        if (str(i).startswith("1")):
-            count += 1
-    return count
+def get_number_seq_start_0(langage):
+    return sum(seq.startswith('0') for seq in langage)
 
+def get_medianeLength(langage):
+    lengths = [len(seq) for seq in langage]
+    return pd.Series(lengths).median() if lengths else 0
 
-def get_number_seq_start_0(langage=[]):
-    count = 0
-    for i in langage:
-        if (str(i).startswith("0")):
-            count += 1
-    return count
+def get_mode(langage):
+    lengths = [len(seq) for seq in langage]
+    return pd.Series(lengths).mode()[0] if lengths else 0
 
+def getEcartInterQuartile(langage):
+    lengths = [len(seq) for seq in langage]
+    return pd.Series(lengths).quantile(0.75) - pd.Series(lengths).quantile(0.25) if lengths else 0
 
-def get_medianeLength(langage=[]):
-    lengths = []
-    for i in langage:
-        lengths.append(len(i))
-    return np.median(lengths)
+def get_squew(langage):
+    lengths = [len(seq) for seq in langage]
+    return pd.Series(lengths).skew() if lengths else 0
 
+def minLength(langage):
+    lengths = [len(seq) for seq in langage]
+    return min(lengths) if lengths else 0
 
-# La longueur la plus fréquente parmi toutes les séquences.
-def get_mode(langage=[]):
-    lengths = []
-    for i in langage:
-        lengths.append(len(i))
-    return np.argmax(np.bincount(lengths))
+def maxLength(langage):
+    lengths = [len(seq) for seq in langage]
+    return max(lengths) if lengths else 0
 
-
-def getEcartInterQuartile(langage=[]):
-    # Écart interquartile
-    lengths = []
-    for i in langage:
-        lengths.append(len(i))
-    quartiles = np.percentile(lengths, [25, 75])
-    return quartiles[1] - quartiles[0]
-
-
-def maxLength(langage=[]):
-    lengths = []
-    for i in langage:
-        lengths.append(len(i))
-    return max(lengths)
-
-
-def minLength(langage=[]):
-    lengths = []
-    for i in langage:
-        lengths.append(len(i))
-    return min(lengths)
-
-
-# Une mesure de l'asymétrie de la distribution des longueurs des séquences par rapport à la moyenne.
-def get_squew(langage=[]):
-    lengths = []
-    for i in langage:
-        lengths.append(len(i))
-    return np.mean((lengths - np.mean(lengths)) ** 3) / np.std(lengths) ** 3
-
-
-def calculate_entropy(language):
-    # Combine all sequences into a single string
-    combined_sequence = ''.join(language)
-
-    # Calculate the frequency of each character
-    char_count = Counter(combined_sequence)
-    total_chars = len(combined_sequence)
-
-    # Calculate the entropy
-    entropy = 0
-    for char, count in char_count.items():
-        probability = count / total_chars
-        entropy -= probability * math.log2(probability)
-
+def calculate_entropy(langage):
+    from math import log2
+    lengths = [len(seq) for seq in langage]
+    total = sum(lengths)
+    entropy = -sum((length/total) * log2(length/total) for length in lengths) if total else 0
     return entropy
 
-
-def count_total_bit_transitions(language):
+def count_total_bit_transitions(langage):
     total_transitions = 0
-    for sequence in language:
-        # Iterate through the sequence and count the transitions
-        for i in range(1, len(sequence)):
-            if sequence[i] != sequence[i - 1]:
-                total_transitions += 1
+    for seq in langage:
+        total_transitions += sum(seq[i] != seq[i+1] for i in range(len(seq)-1))
     return total_transitions
-
 
 # générer l'array pour le ML
 def create_data_row(langage=[]):
@@ -344,10 +298,10 @@ def create_data_row(langage=[]):
 
 def create_language_properties (langage=[]):
     row = []
-        # Longueur moyenne des séquences
+    # Longueur moyenne des séquences
     row.append(getAverageLength(langage))
     # Longueur des elements du langage séquences
-    # row.append(len(langage))
+    row.append(len(langage))
     # Proportion de '0' dans les séquences
     row.append(get_0_proportion(langage))
     # Proportion de '1' dans les séquences
@@ -407,12 +361,27 @@ def save_langages_to_csv(langages, filename):
 # create a model
 
 def createAdaBoostClassifierModel():
-    df = pd.read_csv('/Users/priscafehiarisoadama/IdeaProjects/django_language_test_models/data/data.csv')
+    df = pd.read_csv('/Users/priscafehiarisoadama/IdeaProjects/django_language_test_models/data/data3.csv')
     test_data=pd.read_csv('/Users/priscafehiarisoadama/IdeaProjects/django_language_test_models/data/data2.csv')
-    df=df+test_data
+    # df=pd.concat([df,test_data])
     # df.SkewnessLength = df.SkewnessLength.fillna(0)
-    df=df.drop(['longueur'],axis=1)
+
+    df.ecartType=df.ecartType.fillna(df.ecartType.mean())
+    df.SkewnessLength=df.SkewnessLength.fillna(df.SkewnessLength.mean())
+
+    # df=df.drop(['longueur'],axis=1)
+    # df=df.drop(['ModeLength'],axis=1)
+    # df=df.drop(['MedianLength'],axis=1)
+    # df=df.drop(['AverageLength'],axis=1)
+    # df=df.drop(['IQRLength'],axis=1)
+    # df=df.drop(['NumSeqStart0'],axis=1)
+    # df=df.drop(['NumSeqStart1'],axis=1)
+    # df=df.drop(['Proportion1'],axis=1)
+    # df=df.drop(['Proportion0'],axis=1)
     df=df.drop(['SkewnessLength'],axis=1)
+
+    # df=df.drop(['entropy'],axis=1)
+    # df=df.drop(['bit_transition'],axis=1)
     training_data = df
     np.random.seed(42)
     X=training_data.drop("IsCode",axis=1)
@@ -422,7 +391,7 @@ def createAdaBoostClassifierModel():
     print("unique ",df["IsCode"])
 
     # split the data
-    x_train, x_test, y_train , y_test=train_test_split(X,Y,test_size= 0.2)
+    x_train, x_test, y_train , y_test=train_test_split(X,Y,test_size= 0.3)
     # Normalize the data
     scaler = StandardScaler()
     x_train_scaled = scaler.fit_transform(x_train)
@@ -452,7 +421,7 @@ def predict_language( language):
     properties_df = pd.DataFrame(data=[properties], columns=columns)  # Create DataFrame with correct columns
     properties_scaled = scaler.transform(properties_df)
     resp=model.predict(properties_scaled)[0]
-    if resp==2:
+    if resp==1:
         return True
     return False
 
@@ -460,13 +429,45 @@ def predict_language( language):
 langage =['1100', '110011', '1010', '1011010', '1111010', '110', '100001', '1010100', '1010101']
 # lan = generateAnEqualListOflangages(5000)
 ## save langages to csv
-# save_langages_to_csv(lan,"/Users/priscafehiarisoadama/IdeaProjects/django_language_test_models/data/data2.csv")
+# save_langages_to_csv(lan,"/Users/priscafehiarisoadama/IdeaProjects/django_language_test_models/data/data3.csv")
 
 
-# createAdaBoostClassifierModel()
-print(predict_language(langage))
-print(langage)
-print(checkIfCode(langage))
+createAdaBoostClassifierModel()
+examples = [
+    ['111101', '1111100', '110', '11101'],
+    ['111000', '0011', '1001011', '1000111', '11', '010101', '000100'],
+    ['10', '1010']
+    # ['01100', '101', '1011', '1010', '0100010', '111000', '0', '110001', '00111', '001'],
+    # ['100001'],
+    # ['01', '111110', '0100', '01'],
+    # ['00000', '000', '10101', '100', '01', '111001'],
+    # ['00101', '0000111', '1001', '100011', '0001', '101', '11', '01101'],
+    # ['10110', '001110', '1', '0', '01001', '10', '1101110'],
+    # ['100', '01110'],
+    # ['1010', '0', '010110', '0011', '0010', '10111', '1']
+]
+#
+for i in examples:
+    print(i)
+    print("predicted : ",predict_language(i))
+    print("sardinas : ",checkIfCode(i))
+
+# print(lan)
+# for i in lan:
+#     print(i)
+#     print("predicted : ",predict_language(i))
+#     print("sardinas : ",checkIfCode(i))
+#     print("prefixes",countPrefixe(i))
+# for ii in examples:
+#     print(get_number_seq_start_0(ii))
+
+# l=['100011', '110011', '1101100', '111', '100100', '1000011', '1111110', '1000110', '11101', '111101']
+# print("sardinas : ",checkIfCode(l))
+
+
+
+
+
 
 
 
