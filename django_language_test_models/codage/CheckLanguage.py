@@ -31,6 +31,8 @@ from sklearn.preprocessing._data import StandardScaler
 from sklearn.svm._classes import SVC
 from sklearn.tree._classes import DecisionTreeClassifier
 
+from django_language_test_models.codage.Test import IsTheCodeUniquelyDeciperable
+
 
 def isPrefixe(string_code, string_prefix):
     return string_code.startswith(string_prefix)
@@ -289,6 +291,8 @@ def create_data_row(langage=[]):
     row.append(calculate_entropy(langage))
     # bit trnsition
     row.append(count_total_bit_transitions(langage))
+    # dangling suffixe
+    row.append(0 if IsTheCodeUniquelyDeciperable(set(langage)) else 1)
     # voir si c'est un code ou non
     if checkIfCode(langage):
         row.append(1)
@@ -328,6 +332,8 @@ def create_language_properties (langage=[]):
     row.append(calculate_entropy(langage))
     # bit trnsition
     row.append(count_total_bit_transitions(langage))
+    # dangling suffixe
+    row.append(0 if IsTheCodeUniquelyDeciperable(set(langage)) else 1)
     return row
 
 # generer les listes de données
@@ -348,7 +354,7 @@ def save_langages_to_csv(langages, filename):
     header = [
         "AverageLength", "longueur", "Proportion0", "Proportion1", "ecartType",
         "NumSeqStart1", "NumSeqStart0", "MedianLength", "ModeLength",
-        "IQRLength", "SkewnessLength", "minLength", "max length", "entropy", "bit_transition", "IsCode"
+        "IQRLength", "SkewnessLength", "minLength", "max length", "entropy", "bit_transition","dangling_prefixes", "IsCode"
     ]
     with open(filename, mode='w', newline='') as file:
         writer = csv.writer(file)
@@ -361,8 +367,8 @@ def save_langages_to_csv(langages, filename):
 # create a model
 
 def createAdaBoostClassifierModel():
-    df = pd.read_csv('/Users/priscafehiarisoadama/IdeaProjects/django_language_test_models/data/data3.csv')
-    test_data=pd.read_csv('/Users/priscafehiarisoadama/IdeaProjects/django_language_test_models/data/data2.csv')
+    df = pd.read_csv('/Users/priscafehiarisoadama/django_language_Prediction_models/data/data3.csv')
+    test_data=pd.read_csv('/Users/priscafehiarisoadama/django_language_Prediction_models/data/data3.csv')
     # df=pd.concat([df,test_data])
     # df.SkewnessLength = df.SkewnessLength.fillna(0)
 
@@ -403,16 +409,16 @@ def createAdaBoostClassifierModel():
     print(scores4)
 
     # Save the model and scaler
-    joblib.dump(ada, '../../data/model/best_ada_model.pkl')
-    joblib.dump(scaler, '../../data/model/scaler.pkl')
-    joblib.dump(training_columns, '../../data/model/training_columns.pkl')
+    joblib.dump(ada, '/Users/priscafehiarisoadama/django_language_Prediction_models/data/model/best_ada_model.pkl')
+    joblib.dump(scaler, '/Users/priscafehiarisoadama/django_language_Prediction_models/data/model/scaler.pkl')
+    joblib.dump(training_columns, '/Users/priscafehiarisoadama/django_language_Prediction_models/data/model/training_columns.pkl')
 
 
 def predict_language( language):
 
-    modelPath="/Users/priscafehiarisoadama/IdeaProjects/django_language_test_models/data/model/best_ada_model.pkl"
-    scalerPath="/Users/priscafehiarisoadama/IdeaProjects/django_language_test_models/data/model/scaler.pkl"
-    columns="/Users/priscafehiarisoadama/IdeaProjects/django_language_test_models/data/model/training_columns.pkl"
+    modelPath="/Users/priscafehiarisoadama/django_language_Prediction_models/data/model/best_ada_model.pkl"
+    scalerPath="/Users/priscafehiarisoadama/django_language_Prediction_models/data/model/scaler.pkl"
+    columns="/Users/priscafehiarisoadama/django_language_Prediction_models/data/model/training_columns.pkl"
 
     model = joblib.load(modelPath)
     scaler = joblib.load(scalerPath)
@@ -429,10 +435,10 @@ def predict_language( language):
 langage =['1100', '110011', '1010', '1011010', '1111010', '110', '100001', '1010100', '1010101']
 # lan = generateAnEqualListOflangages(5000)
 ## save langages to csv
-# save_langages_to_csv(lan,"/Users/priscafehiarisoadama/IdeaProjects/django_language_test_models/data/data3.csv")
+# save_langages_to_csv(lan,"/Users/priscafehiarisoadama/django_language_Prediction_models/data/data3.csv")
 
 
-createAdaBoostClassifierModel()
+# createAdaBoostClassifierModel()
 examples = [
     ['111101', '1111100', '110', '11101'],
     ['111000', '0011', '1001011', '1000111', '11', '010101', '000100'],
